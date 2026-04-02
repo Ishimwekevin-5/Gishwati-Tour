@@ -1,0 +1,131 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: content
+    // Document ID: site
+    // Fields:
+    //   - hero: map (required) - Hero section content
+    //   - pricing: list (required) - Array of pricing plans
+    //   - contact: map (required) - Contact information
+    //
+    // Collection: users
+    // Document ID: {userId}
+    // Fields:
+    //   - uid: string (required) - User's Firebase UID
+    //   - email: string (required) - User's email
+    //   - displayName: string (optional) - User's display name
+    //   - role: string (required) - 'user', 'admin', 'super_admin'
+    //   - status: string (required) - 'pending', 'approved', 'rejected'
+    //
+    // Collection: accessRequests
+    // Document ID: {requestId}
+    // Fields:
+    //   - uid: string (required) - Requesting user's UID
+    //   - email: string (required) - Requesting user's email
+    //   - displayName: string (optional) - Requesting user's name
+    //   - message: string (optional) - Request message
+    //   - timestamp: timestamp (required) - Request time
+    //   - status: string (required) - 'pending', 'approved', 'rejected'
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        ((request.auth.token.email == "ishimwekevin199@gmail.com" && request.auth.token.email_verified == true) ||
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin']));
+    }
+
+    function isSuperAdmin() {
+      return isAuthenticated() && 
+        ((request.auth.token.email == "ishimwekevin199@gmail.com" && request.auth.token.email_verified == true) ||
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super_admin'));
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'role', 'status']) &&
+             data.uid is string &&
+             data.email is string &&
+             data.role in ['user', 'admin', 'super_admin'] &&
+             data.status in ['pending', 'approved', 'rejected'];
+    }
+
+    function isValidContent(data) {
+      return data.keys().hasAll(['hero', 'pricing', 'contact']) &&
+             data.hero is map &&
+             data.pricing is list &&
+             data.contact is map;
+    }
+
+    function isValidAccessRequest(data) {
+      return data.keys().hasAll(['uid', 'email', 'timestamp', 'status']) &&
+             data.uid is string &&
+             data.email is string &&
+             data.status in ['pending', 'approved', 'rejected'];
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    // Site Content
+    match /content/site {
+      allow read: if true; // Publicly readable
+      allow write: if isAdmin() && isValidContent(request.resource.data);
+    }
+
+    // User Profiles
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      
+      // Super Admin can manage all roles. 
+      // Users can only create their own profile as 'user' and 'pending'.
+      allow create: if isAuthenticated() && isValidUser(request.resource.data) && 
+                      ((isOwner(userId) && request.resource.data.role == 'user') || isSuperAdmin());
+      
+      allow update: if isAuthenticated() && isValidUser(request.resource.data) && 
+                      ((isOwner(userId) && request.resource.data.role == resource.data.role) || isSuperAdmin());
+      
+      allow delete: if isSuperAdmin();
+    }
+
+    // Access Requests
+    match /accessRequests/{requestId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated() && isValidAccessRequest(request.resource.data) && request.resource.data.uid == request.auth.uid;
+      allow update: if isSuperAdmin() && isValidAccessRequest(request.resource.data);
+      allow delete: if isSuperAdmin();
+    }
+
+    // Preauthorized Admins
+    match /preauthorizedAdmins/{adminEmail} {
+      allow get: if isAuthenticated();
+      allow list: if isAdmin();
+      allow write: if isSuperAdmin();
+    }
+
+    // Activity Logs
+    match /activityLogs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin(); // Admins create logs when they update content
+      allow update, delete: if false; // Logs should be immutable
+    }
+  }
+}

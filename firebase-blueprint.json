@@ -1,0 +1,112 @@
+{
+  "entities": {
+    "SiteContent": {
+      "title": "Site Content",
+      "description": "Stores all editable content for the website",
+      "type": "object",
+      "properties": {
+        "hero": {
+          "type": "object",
+          "properties": {
+            "title": { "type": "string" },
+            "subtitle": { "type": "string" },
+            "ctaText": { "type": "string" }
+          }
+        },
+        "pricing": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "price": { "type": "string" },
+              "description": { "type": "string" },
+              "features": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "contact": {
+          "type": "object",
+          "properties": {
+            "phones": { "type": "array", "items": { "type": "string" } },
+            "email": { "type": "string" },
+            "address": { "type": "string" },
+            "mapLink": { "type": "string" }
+          }
+        }
+      }
+    },
+    "User": {
+      "title": "User Profile",
+      "description": "Stores user roles and basic info",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "admin", "super_admin"] },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "AccessRequest": {
+      "title": "Access Request",
+      "description": "Requests from users to become admins",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "message": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] }
+      }
+    },
+    "PreauthorizedAdmin": {
+      "title": "Preauthorized Admin",
+      "description": "Emails that are automatically granted admin access",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "addedBy": { "type": "string" },
+        "addedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email"]
+    },
+    "ActivityLog": {
+      "title": "Activity Log",
+      "description": "Logs of administrative actions",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "action": { "type": "string" },
+        "details": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "action", "timestamp"]
+    }
+  },
+  "firestore": {
+    "content/site": {
+      "schema": "SiteContent",
+      "description": "The main site content document"
+    },
+    "users/{userId}": {
+      "schema": "User",
+      "description": "User profile documents"
+    },
+    "accessRequests/{requestId}": {
+      "schema": "AccessRequest",
+      "description": "Access request documents"
+    },
+    "preauthorizedAdmins/{email}": {
+      "schema": "PreauthorizedAdmin",
+      "description": "Preauthorized admin emails"
+    },
+    "activityLogs/{logId}": {
+      "schema": "ActivityLog",
+      "description": "Activity logs for content changes"
+    }
+  }
+}

@@ -2,8 +2,10 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { motion } from 'motion/react';
 import { Calendar, Users, Mail, Phone, User } from 'lucide-react';
+import { useSite } from '../SiteContext';
 
 export default function ReservationForm() {
+  const { content } = useSite();
   const { register, handleSubmit, formState: { errors } } = useForm();
 
   const onSubmit = (data: any) => {
@@ -11,108 +13,112 @@ export default function ReservationForm() {
     alert('Thank you! Your reservation request has been sent. We will contact you shortly.');
   };
 
+  if (!content) return null;
+
   return (
-    <section id="reservation" className="py-24 bg-white">
+    <section id="reserve" className="py-32 bg-zinc-50 border-t border-zinc-100">
       <div className="container mx-auto px-6">
-        <div className="max-w-4xl mx-auto bg-zinc-900 rounded-[2rem] overflow-hidden shadow-2xl flex flex-col md:flex-row">
+        <div className="max-w-5xl mx-auto bg-white rounded-md overflow-hidden shadow-2xl flex flex-col md:flex-row border border-zinc-200">
           {/* Left Side - Info */}
-          <div className="md:w-1/3 bg-emerald-900 p-12 text-white flex flex-col justify-between">
-            <div>
-              <h2 className="text-3xl font-bold mb-6">Secure Your Spot</h2>
-              <p className="text-emerald-100/70 mb-8">
+          <div className="md:w-1/3 bg-zinc-950 p-12 text-white flex flex-col justify-between relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl" />
+            <div className="relative z-10">
+              <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em] mb-4">Reservations</p>
+              <h2 className="text-4xl font-extrabold mb-8 tracking-tight leading-tight">Secure Your Spot</h2>
+              <p className="text-zinc-400 mb-10 font-medium leading-relaxed">
                 Gishwati is a protected area with limited daily visitors. Book in advance to ensure your preferred dates.
               </p>
             </div>
-            <div className="space-y-6">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                  <Calendar className="w-5 h-5" />
+            <div className="space-y-8 relative z-10">
+              <div className="flex items-center gap-5">
+                <div className="w-10 h-10 rounded-md bg-zinc-900 border border-zinc-800 flex items-center justify-center text-emerald-500">
+                  <Calendar className="w-5 h-5 stroke-[1.5]" />
                 </div>
                 <div>
-                  <p className="text-xs text-emerald-300 uppercase font-bold">Availability</p>
-                  <p className="text-sm">Mon - Sun, 6AM - 6PM</p>
+                  <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Availability</p>
+                  <p className="text-sm font-bold">Mon - Sun, 6AM - 6PM</p>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                  <Users className="w-5 h-5" />
+              <div className="flex items-center gap-5">
+                <div className="w-10 h-10 rounded-md bg-zinc-900 border border-zinc-800 flex items-center justify-center text-emerald-500">
+                  <Users className="w-5 h-5 stroke-[1.5]" />
                 </div>
                 <div>
-                  <p className="text-xs text-emerald-300 uppercase font-bold">Group Size</p>
-                  <p className="text-sm">Max 8 people per guide</p>
+                  <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Group Size</p>
+                  <p className="text-sm font-bold">Max 8 people per guide</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Right Side - Form */}
-          <div className="md:w-2/3 p-12">
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-zinc-400">Full Name</label>
+          <div className="md:w-2/3 p-12 bg-white">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Full Name</label>
                   <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 stroke-[2]" />
                     <input
                       {...register('name', { required: true })}
-                      className="w-full bg-zinc-800 border border-zinc-700 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                      className="w-full bg-zinc-50 border border-zinc-200 rounded-md py-3.5 pl-12 pr-4 text-zinc-950 font-medium focus:outline-none focus:border-emerald-500 transition-all"
                       placeholder="John Doe"
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-zinc-400">Email Address</label>
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Email Address</label>
                   <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 stroke-[2]" />
                     <input
                       {...register('email', { required: true, pattern: /^\S+@\S+$/i })}
-                      className="w-full bg-zinc-800 border border-zinc-700 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                      className="w-full bg-zinc-50 border border-zinc-200 rounded-md py-3.5 pl-12 pr-4 text-zinc-950 font-medium focus:outline-none focus:border-emerald-500 transition-all"
                       placeholder="john@example.com"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-zinc-400">Phone Number</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Phone Number</label>
                   <div className="relative">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 stroke-[2]" />
                     <input
                       {...register('phone')}
-                      className="w-full bg-zinc-800 border border-zinc-700 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                      className="w-full bg-zinc-50 border border-zinc-200 rounded-md py-3.5 pl-12 pr-4 text-zinc-950 font-medium focus:outline-none focus:border-emerald-500 transition-all"
                       placeholder="+250 ..."
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-zinc-400">Preferred Date</label>
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Preferred Date</label>
                   <div className="relative">
-                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 stroke-[2]" />
                     <input
                       type="date"
                       {...register('date', { required: true })}
-                      className="w-full bg-zinc-800 border border-zinc-700 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                      className="w-full bg-zinc-50 border border-zinc-200 rounded-md py-3.5 pl-12 pr-4 text-zinc-950 font-medium focus:outline-none focus:border-emerald-500 transition-all"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-400">Select Package</label>
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Select Package</label>
                 <select
                   {...register('package')}
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-emerald-500 transition-colors appearance-none"
+                  className="w-full bg-zinc-50 border border-zinc-200 rounded-md py-3.5 px-4 text-zinc-950 font-bold focus:outline-none focus:border-emerald-500 transition-all appearance-none"
                 >
-                  <option value="day">Day Explorer ($10)</option>
-                  <option value="primate">Primate Trek ($30)</option>
-                  <option value="overnight">Overnight Safari ($50)</option>
+                  {content.pricing.map(plan => (
+                    <option key={plan.name} value={plan.name}>{plan.name} ({plan.price})</option>
+                  ))}
                 </select>
               </div>
 
               <button
                 type="submit"
-                className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-900/20"
+                className="w-full py-5 bg-zinc-950 hover:bg-zinc-800 text-white font-bold rounded-md transition-all duration-300 shadow-xl uppercase tracking-widest text-xs"
               >
                 Confirm Reservation Request
               </button>
