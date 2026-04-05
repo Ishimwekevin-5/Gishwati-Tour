@@ -5,12 +5,13 @@ import { Calendar, Users, Mail, Phone, User } from 'lucide-react';
 import { useSite } from '../SiteContext';
 
 export default function ReservationForm() {
-  const { content } = useSite();
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const { content, showToast } = useSite();
+  const { register, handleSubmit, formState: { errors }, reset } = useForm();
 
   const onSubmit = (data: any) => {
     console.log('Reservation Data:', data);
-    alert('Thank you! Your reservation request has been sent. We will contact you shortly.');
+    showToast('Thank you! Your reservation request has been sent. We will contact you shortly.');
+    reset();
   };
 
   if (!content) return null;

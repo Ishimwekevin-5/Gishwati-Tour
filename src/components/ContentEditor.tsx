@@ -14,7 +14,7 @@ interface ActivityLog {
 }
 
 export default function ContentEditor() {
-  const { content, updateContent } = useSite();
+  const { content, updateContent, showToast } = useSite();
   const [localContent, setLocalContent] = useState(content);
   const [saving, setSaving] = useState(false);
   const [logs, setLogs] = useState<ActivityLog[]>([]);
@@ -58,10 +58,10 @@ export default function ContentEditor() {
     try {
       await updateContent(localContent);
       await logActivity('Update Content', 'Modified site text or pricing plans');
-      alert('Content updated successfully!');
+      showToast('Content updated successfully!');
     } catch (error) {
       console.error(error);
-      alert('Failed to update content.');
+      showToast('Failed to update content.', 'error');
     } finally {
       setSaving(false);
     }

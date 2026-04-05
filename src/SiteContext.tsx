@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { doc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db, handleFirestoreError, OperationType } from './firebase';
+import { Toast, ToastType } from './components/UI';
+import { AnimatePresence } from 'motion/react';
 
 interface SiteContent {
   hero: {
@@ -39,6 +41,7 @@ interface SiteContextType {
   isAdmin: boolean;
   isSuperAdmin: boolean;
   updateContent: (newContent: SiteContent) => Promise<void>;
+  showToast: (message: string, type?: 'success' | 'error' | 'info' | 'warning') => void;
 }
 
 const SiteContext = createContext<SiteContextType | undefined>(undefined);
@@ -82,6 +85,12 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+
+  const showToast = (message: string, type: ToastType = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 5000);
+  };
 
   useEffect(() => {
     // Listen for Auth changes
@@ -155,8 +164,17 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isSuperAdmin = profile?.role === 'super_admin' || user?.email === 'ishimwekevin199@gmail.com';
 
   return (
-    <SiteContext.Provider value={{ content, user, profile, loading, isAdmin, isSuperAdmin, updateContent }}>
+    <SiteContext.Provider value={{ content, user, profile, loading, isAdmin, isSuperAdmin, updateContent, showToast }}>
       {children}
+      <AnimatePresence>
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        )}
+      </AnimatePresence>
     </SiteContext.Provider>
   );
 };

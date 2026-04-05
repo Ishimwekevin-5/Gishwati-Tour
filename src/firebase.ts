@@ -71,8 +71,7 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 
   const json = safeStringify(errInfo);
   console.error('Firestore Error: ', json);
-  // Throw a plain string if Error constructor might be stringified by a tool
-  throw json;
+  throw new Error(json);
 }
 
 // Test connection to Firestore

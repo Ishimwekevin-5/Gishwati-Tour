@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, doc, updateDoc, deleteDoc, setDoc, query, where } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType, auth } from '../firebase';
 import { Shield, UserX, CheckCircle, XCircle, Clock, Plus, Trash2, Mail } from 'lucide-react';
+import { ConfirmModal } from './UI';
+import { useSite } from '../SiteContext';
 
 interface UserProfile {
   uid: string;
@@ -18,10 +20,25 @@ interface PreAuthAdmin {
 }
 
 export default function UserManagement() {
+  const { showToast } = useSite();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [preAuthAdmins, setPreAuthAdmins] = useState<PreAuthAdmin[]>([]);
   const [newEmail, setNewEmail] = useState('');
   const [loading, setLoading] = useState(true);
+
+  // Modal states
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    variant?: 'danger' | 'primary';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {}
+  });
 
   useEffect(() => {
     const unsubscribeUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
@@ -56,45 +73,67 @@ export default function UserManagement() {
         addedAt: new Date().toISOString()
       });
       setNewEmail('');
+      showToast('Email pre-authorized successfully');
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, `preauthorizedAdmins/${newEmail}`);
+      showToast('Failed to pre-authorize email', 'error');
     }
   };
 
   const removePreAuthEmail = async (email: string) => {
-    if (window.confirm(`Remove ${email} from pre-authorized admins?`)) {
-      try {
-        await deleteDoc(doc(db, 'preauthorizedAdmins', email));
-      } catch (error) {
-        handleFirestoreError(error, OperationType.DELETE, `preauthorizedAdmins/${email}`);
+    setConfirmModal({
+      isOpen: true,
+      title: 'Remove Pre-authorization',
+      message: `Are you sure you want to remove ${email} from pre-authorized admins?`,
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, 'preauthorizedAdmins', email));
+          showToast('Pre-authorization removed');
+        } catch (error) {
+          handleFirestoreError(error, OperationType.DELETE, `preauthorizedAdmins/${email}`);
+          showToast('Failed to remove pre-authorization', 'error');
+        }
       }
-    }
+    });
   };
 
   const updateUserRole = async (uid: string, newRole: string) => {
     try {
       await updateDoc(doc(db, 'users', uid), { role: newRole });
+      showToast('User role updated');
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `users/${uid}`);
+      showToast('Failed to update user role', 'error');
     }
   };
 
   const updateUserStatus = async (uid: string, newStatus: string) => {
     try {
       await updateDoc(doc(db, 'users', uid), { status: newStatus });
+      showToast(`User status updated to ${newStatus}`);
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `users/${uid}`);
+      showToast('Failed to update user status', 'error');
     }
   };
 
   const deleteUser = async (uid: string) => {
-    if (window.confirm('Are you sure you want to delete this user?')) {
-      try {
-        await deleteDoc(doc(db, 'users', uid));
-      } catch (error) {
-        handleFirestoreError(error, OperationType.DELETE, `users/${uid}`);
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete User',
+      message: 'Are you sure you want to delete this user? This action cannot be undone.',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, 'users', uid));
+          showToast('User deleted successfully');
+        } catch (error) {
+          handleFirestoreError(error, OperationType.DELETE, `users/${uid}`);
+          showToast('Failed to delete user', 'error');
+        }
       }
-    }
+    });
   };
 
   if (loading) return <div>Loading users...</div>;
@@ -249,6 +288,14 @@ export default function UserManagement() {
           </div>
         </div>
       </div>
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant={confirmModal.variant}
+      />
     </div>
   );
 }
